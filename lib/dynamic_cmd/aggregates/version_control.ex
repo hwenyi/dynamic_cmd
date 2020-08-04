@@ -1,6 +1,6 @@
 defmodule DynamicCmd.Aggregates.VersionControl do
-  alias DynamicCmd.Commands.DispatchCommand
-  alias DynamicCmd.Events.CommandDispatched
+  alias DynamicCmd.Commands.{DispatchCommand, RevertCommand}
+  alias DynamicCmd.Events.{CommandDispatched, CommandReverted}
 
   defstruct [:id, version: 0]
 
@@ -8,7 +8,12 @@ defmodule DynamicCmd.Aggregates.VersionControl do
     %CommandDispatched{id: command.id, version: state.version + 1}
   end
 
-  def apply(state, %CommandDispatched{} = event) do
+  def execute(state, %RevertCommand{} = command) do
+    %CommandReverted{id: command.id, version: state.version - 1}
+  end
+
+  def apply(state, %event_type{} = event)
+      when event_type in [CommandDispatched, CommandReverted] do
     %{state | id: event.id, version: event.version}
   end
 end

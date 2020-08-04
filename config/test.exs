@@ -6,7 +6,6 @@ config :dynamic_cmd, DynamicCmd.EventStore,
   password: "postgres",
   database: "version_control_eventstore_test",
   hostname: "localhost",
-  pool_size: 10,
-  pool_overflow: 5
+  pool_size: 10
 
 config :logger, level: :info
