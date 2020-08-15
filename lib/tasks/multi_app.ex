@@ -16,7 +16,11 @@ defmodule Mix.Tasks.MultiApp do
 
         Mix.shell().info("starting a new commanded application #{id}")
 
-        {:ok, pid} = DynamicCmd.Listeners.Task.start_link(UUID.uuid4(), [])
+        uuid = UUID.uuid4()
+
+        provision_event_store(uuid)
+
+        {:ok, pid} = DynamicCmd.Listeners.Task.start_link(uuid, [])
         ref = Process.monitor(pid)
 
         receive do
@@ -28,5 +32,15 @@ defmodule Mix.Tasks.MultiApp do
       timeout: :infinity
     )
     |> Enum.map(fn {:ok, response} -> response end)
+  end
+
+  # Create an event store schema for the dynamic application
+  defp provision_event_store(uuid) do
+    config =
+      DynamicCmd.EventStore.config()
+      |> Keyword.put(:schema, "cmd" <> String.replace(uuid, "-", ""))
+
+    EventStore.Tasks.Create.exec(config, [])
+    EventStore.Tasks.Init.exec(DynamicCmd.EventStore, config, [])
   end
 end
